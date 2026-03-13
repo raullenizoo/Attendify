@@ -1,22 +1,168 @@
 <?php
     session_start();
-    include '../../db/config.php';
+    require '../../config/db.php';
     require '../../includes/security.php';
 
     if (!isset($_SESSION['user_id'])) {
-    header("Location: ../../pages/get-started.php"); // redirect to login/start page
+    header("Location: /Attendify/pages/get-started.php"); // redirect to login/start page
     exit();
     }
 
     $user_id = $_SESSION['user_id'];
 
-    $sql_user_name = "SELECT first_name, last_name, role FROM users WHERE id = ?";
-    $stmt = $conn->prepare($sql_user_name);
+    // =========================
+    // 1. USER PROFILE
+    // =========================
+    $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
     $stmt->bind_param("i", $user_id);
     $stmt->execute();
+    $user = $stmt->get_result()->fetch_assoc();
 
-    $result = $stmt->get_result();
-    $teacher = $result->fetch_assoc();
+    $full_name = $user['first_name'] . ' ' . $user['last_name'];
+    $id_number = $user['id_number'];
+    $email = $user['email'];
+    $department = $user['department'];
+
+    /* =========================
+    Total Students Card 
+    ========================= */
+        // TOTAL STUDENTS under this teacher
+    $stmt = $conn->prepare("
+        SELECT COUNT(DISTINCT ce.student_id) AS total_students
+        FROM class_enrollments ce
+        JOIN class_sections cs ON ce.class_section_id = cs.id
+        WHERE cs.teacher_id = ?
+    ");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $total_students = $stmt->get_result()->fetch_assoc()['total_students'];
+
+    
+    // Classes Today Card
+
+    $stmt = $conn->prepare("
+    SELECT COUNT(*) AS total_classes
+    FROM class_sections
+    WHERE teacher_id = ? AND is_active = 1
+    ");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $classes_today = $stmt->get_result()->fetch_assoc()['total_classes'];
+
+    // Present Today Card
+    $stmt = $conn->prepare("
+    SELECT COUNT(*) AS present_today
+    FROM attendance_records ar
+    JOIN class_sections cs ON ar.class_section_id = cs.id
+    WHERE cs.teacher_id = ?
+    AND ar.attendance_date = CURDATE()
+    AND ar.status = 'present'
+    ");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $present_today = $stmt->get_result()->fetch_assoc()['present_today'];
+
+    // Absent Today Card
+    $stmt = $conn->prepare("
+    SELECT COUNT(*) AS absent_today
+    FROM attendance_records ar
+    JOIN class_sections cs ON ar.class_section_id = cs.id
+    WHERE cs.teacher_id = ?
+    AND ar.attendance_date = CURDATE()
+    AND ar.status = 'absent'
+    ");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $absent_today = $stmt->get_result()->fetch_assoc()['absent_today'];
+
+
+    // pencing appeals card
+    $pending_appeals = 0;
+
+    // =========================
+    // TODAY'S CLASSES
+    // =========================
+    $stmt = $conn->prepare("
+    SELECT 
+        cs.id,
+        s.subject_name,
+        cs.section_name,
+        cs.schedule,
+        cs.room
+    FROM class_sections cs
+    JOIN subjects s ON cs.subject_id = s.id
+    WHERE cs.teacher_id = ? 
+    AND cs.is_active = 1
+    ");
+
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $today_classes = $stmt->get_result();
+
+
+    // =========================
+    // RECENT ATTENDANCE ACTIVITY
+    // =========================
+    $stmt = $conn->prepare("
+    SELECT 
+        u.first_name,
+        u.last_name,
+        s.subject_name,
+        ar.attendance_date,
+        ar.status
+    FROM attendance_records ar
+    JOIN users u ON ar.student_id = u.id
+    JOIN class_sections cs ON ar.class_section_id = cs.id
+    JOIN subjects s ON cs.subject_id = s.id
+    WHERE cs.teacher_id = ?
+    ORDER BY ar.attendance_date DESC
+    LIMIT 10
+    ");
+
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $recent_attendance = $stmt->get_result();
+
+
+
+    // =========================
+    // PENDING APPEALS
+    // =========================
+    $stmt = $conn->prepare("
+    SELECT 
+    u.first_name,
+    u.last_name,
+    s.subject_name,
+    aa.attendance_date,
+    aa.status
+    FROM attendance_appeals aa
+    JOIN users u ON aa.student_id = u.id
+    JOIN class_sections cs ON aa.class_section_id = cs.id
+    JOIN subjects s ON cs.subject_id = s.id
+    WHERE cs.teacher_id = ?
+    AND aa.status = 'pending'
+    ORDER BY aa.created_at DESC
+    LIMIT 5
+    ");
+
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $appeals = $stmt->get_result();
+
+    // =========================
+    // ANNOUNCEMENTS
+    // =========================
+    $stmt = $conn->prepare("
+    SELECT title, created_at
+    FROM announcements
+    WHERE author_id = ?
+    ORDER BY created_at DESC
+    LIMIT 5
+    ");
+
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $announcements = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -26,7 +172,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teacher Dashboard - Attendance Monitoring System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../../css/teacher-dashboard.css">
+    <link rel="stylesheet" href="/Attendify/public/assets/css/teacher-dashboard.css">
 </head>
 <body>
     <div class="dashboard-container">
@@ -91,10 +237,12 @@
             </nav>
 
             <div class="logout-section">
-                <button class="nav-link" onclick="handleLogout()">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </button>
+                <form action="logout.php" method="POST">
+                    <button class="nav-link" onclick="handleLogout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
             </div>
         </aside>
 
@@ -126,11 +274,11 @@
 
                     <div class="teacher-profile" onclick="toggleUserMenu()" title="User Profile">
                         <div class="teacher-avatar"><?php 
-        echo strtoupper(substr($teacher['first_name'],0,1) . substr($teacher['last_name'],0,1)); 
+        echo strtoupper(substr($user['first_name'],0,1) . substr($user['last_name'],0,1)); 
         ?></div>
                         <div class="teacher-info">
-                            <span class="teacher-name"><?php echo "Mr. " . htmlspecialchars($teacher['first_name']); ?></span>
-                            <span class="teacher-role"><?php echo ucfirst($teacher['role']); ?></span>
+                            <span class="teacher-name"><?php echo "Mr. " . htmlspecialchars($user['first_name']); ?></span>
+                            <span class="teacher-role"><?php echo ucfirst($user['role']); ?></span>
                         </div>
                     </div>
                 </div>
@@ -153,7 +301,7 @@
                             <div class="stat-icon primary">
                                 <i class="fas fa-users"></i>
                             </div>
-                            <div class="stat-number">145</div>
+                            <div class="stat-number"><?php echo $total_students; ?></div>
                             <div class="stat-label">Total Students</div>
                         </div>
 
@@ -161,7 +309,7 @@
                             <div class="stat-icon secondary">
                                 <i class="fas fa-calendar-day"></i>
                             </div>
-                            <div class="stat-number">4</div>
+                            <div class="stat-number"><?php echo $classes_today; ?></div>
                             <div class="stat-label">Classes Today</div>
                         </div>
 
@@ -169,7 +317,7 @@
                             <div class="stat-icon success">
                                 <i class="fas fa-check-circle"></i>
                             </div>
-                            <div class="stat-number">128</div>
+                            <div class="stat-number"><?php echo $present_today; ?></div>
                             <div class="stat-label">Present Today</div>
                         </div>
 
@@ -177,7 +325,7 @@
                             <div class="stat-icon danger">
                                 <i class="fas fa-times-circle"></i>
                             </div>
-                            <div class="stat-number">12</div>
+                            <div class="stat-number"><?php echo $absent_today; ?></div>
                             <div class="stat-label">Absent Today</div>
                         </div>
 
@@ -185,7 +333,7 @@
                             <div class="stat-icon warning">
                                 <i class="fas fa-exclamation-circle"></i>
                             </div>
-                            <div class="stat-number">3</div>
+                            <div class="stat-number"><?php echo $pending_appeals; ?></div>
                             <div class="stat-label">Pending Appeals</div>
                         </div>
                     </div>
@@ -197,73 +345,29 @@
                     </div>
 
                     <div class="classes-grid">
+                        <?php if ($today_classes->num_rows > 0): ?>
+                        <?php while ($class = $today_classes->fetch_assoc()): ?>
                         <div class="class-card">
                             <div class="class-time">
                                 <i class="fas fa-clock"></i>
-                                09:00 AM - 10:00 AM
+                                <?php echo htmlspecialchars($class['schedule']); ?>
                             </div>
-                            <div class="class-subject">Mathematics</div>
+                            <div class="class-subject"><?php echo htmlspecialchars($class['subject_name']); ?></div>
                             <div class="class-section">
                                 <i class="fas fa-layer-group"></i>
-                                Class 10-A
+                                <?php echo htmlspecialchars($class['section_name']); ?>
                             </div>
                             <div class="class-room">
                                 <i class="fas fa-door-open"></i>
-                                Room 201
+                                <?php echo htmlspecialchars($class['room']); ?>
                             </div>
                             <button class="btn btn-primary">Take Attendance</button>
                         </div>
+                        <?php endwhile; ?>
+                        <?php else: ?>
 
-                        <div class="class-card">
-                            <div class="class-time">
-                                <i class="fas fa-clock"></i>
-                                10:30 AM - 11:30 AM
-                            </div>
-                            <div class="class-subject">Physics</div>
-                            <div class="class-section">
-                                <i class="fas fa-layer-group"></i>
-                                Class 10-B
-                            </div>
-                            <div class="class-room">
-                                <i class="fas fa-door-open"></i>
-                                Lab 105
-                            </div>
-                            <button class="btn btn-primary">Take Attendance</button>
-                        </div>
-
-                        <div class="class-card">
-                            <div class="class-time">
-                                <i class="fas fa-clock"></i>
-                                01:00 PM - 02:00 PM
-                            </div>
-                            <div class="class-subject">English</div>
-                            <div class="class-section">
-                                <i class="fas fa-layer-group"></i>
-                                Class 10-C
-                            </div>
-                            <div class="class-room">
-                                <i class="fas fa-door-open"></i>
-                                Room 305
-                            </div>
-                            <button class="btn btn-primary">Take Attendance</button>
-                        </div>
-
-                        <div class="class-card">
-                            <div class="class-time">
-                                <i class="fas fa-clock"></i>
-                                02:30 PM - 03:30 PM
-                            </div>
-                            <div class="class-subject">Chemistry</div>
-                            <div class="class-section">
-                                <i class="fas fa-layer-group"></i>
-                                Class 10-A
-                            </div>
-                            <div class="class-room">
-                                <i class="fas fa-door-open"></i>
-                                Lab 202
-                            </div>
-                            <button class="btn btn-primary">Take Attendance</button>
-                        </div>
+                        <p>No classes assigned today.</p>
+                    <?php endif; ?>
                     </div>
 
                     <!-- RECENT ATTENDANCE ACTIVITY -->
@@ -283,37 +387,37 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                <?php if ($recent_attendance->num_rows > 0): ?>
+                                <?php while ($row = $recent_attendance->fetch_assoc()): ?>
                                 <tr>
-                                    <td>Aarav Patel</td>
-                                    <td>Mathematics</td>
-                                    <td>March 12, 2026</td>
-                                    <td><span class="badge badge-success"><i class="fas fa-check"></i> Present</span></td>
+                                    <td><?php echo htmlspecialchars($row['first_name'] . ' ' . $row['last_name']); ?></td>
+                                    <td><?php echo htmlspecialchars($row['subject_name']); ?></td>
+                                    <td><?php echo date("F d, Y", strtotime($row['attendance_date'])); ?></td>
+                                    <td><span class="badge badge-success"><i class="fas fa-check"></i>
+                                        <?php
+                                        $status = $row['status'];
+
+                                        if ($status == 'present') {
+                                            echo '<span class="badge badge-success"><i class="fas fa-check"></i> Present</span>';
+                                        } elseif ($status == 'late') {
+                                            echo '<span class="badge badge-warning"><i class="fas fa-clock"></i> Late</span>';
+                                        } elseif ($status == 'absent') {
+                                            echo '<span class="badge badge-danger"><i class="fas fa-times"></i> Absent</span>';
+                                        } else {
+                                            echo '<span class="badge badge-secondary">Excused</span>';
+                                        }
+                                        ?>
+                                        </span>
+                                    </td>
                                 </tr>
-                                <tr>
-                                    <td>Priya Sharma</td>
-                                    <td>Physics</td>
-                                    <td>March 12, 2026</td>
-                                    <td><span class="badge badge-success"><i class="fas fa-check"></i> Present</span></td>
-                                </tr>
-                                <tr>
-                                    <td>Rohan Gupta</td>
-                                    <td>English</td>
-                                    <td>March 12, 2026</td>
-                                    <td><span class="badge badge-danger"><i class="fas fa-times"></i> Absent</span></td>
-                                </tr>
-                                <tr>
-                                    <td>Ananya Singh</td>
-                                    <td>Chemistry</td>
-                                    <td>March 12, 2026</td>
-                                    <td><span class="badge badge-warning"><i class="fas fa-clock"></i> Late</span></td>
-                                </tr>
-                                <tr>
-                                    <td>Vikram Kumar</td>
-                                    <td>Mathematics</td>
-                                    <td>March 11, 2026</td>
-                                    <td><span class="badge badge-success"><i class="fas fa-check"></i> Present</span></td>
-                                </tr>
+                                <?php endwhile; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="4" style="text-align:center;">No attendance records yet</td>
+                                    </tr>
+                                    <?php endif; ?>
                             </tbody>
+                                    
                         </table>
                     </div>
 
@@ -327,44 +431,24 @@
                             </div>
 
                             <div class="appeals-list">
+                                <?php if ($appeals->num_rows > 0): ?>
+                                <?php while ($row = $appeals->fetch_assoc()): ?>
                                 <div class="appeal-item">
                                     <div class="appeal-info">
-                                        <div class="appeal-student">Arjun Desai</div>
+                                        <div class="appeal-student"><?php echo htmlspecialchars($row['first_name']." ".$row['last_name']); ?></div>
                                         <div class="appeal-details">
-                                            <span><strong>Subject:</strong> Physics</span>
-                                            <span><strong>Date:</strong> March 10, 2026</span>
+                                            <span><strong>Subject:</strong> <?php echo htmlspecialchars($row['subject_name']); ?></span>
+                                            <span><strong>Date:</strong> <?php echo date("F d, Y", strtotime($row['attendance_date'])); ?></span>
                                         </div>
                                     </div>
                                     <div class="appeal-status">
                                         <span class="badge badge-pending">Pending</span>
                                     </div>
                                 </div>
-
-                                <div class="appeal-item">
-                                    <div class="appeal-info">
-                                        <div class="appeal-student">Neha Verma</div>
-                                        <div class="appeal-details">
-                                            <span><strong>Subject:</strong> Mathematics</span>
-                                            <span><strong>Date:</strong> March 09, 2026</span>
-                                        </div>
-                                    </div>
-                                    <div class="appeal-status">
-                                        <span class="badge badge-pending">Pending</span>
-                                    </div>
-                                </div>
-
-                                <div class="appeal-item">
-                                    <div class="appeal-info">
-                                        <div class="appeal-student">Sanjay Iyer</div>
-                                        <div class="appeal-details">
-                                            <span><strong>Subject:</strong> English</span>
-                                            <span><strong>Date:</strong> March 08, 2026</span>
-                                        </div>
-                                    </div>
-                                    <div class="appeal-status">
-                                        <span class="badge badge-pending">Pending</span>
-                                    </div>
-                                </div>
+                                <?php endwhile; ?>
+                                <?php else: ?>
+                                <p>No pending appeals.</p>
+                                <?php endif; ?>
                             </div>
                         </div>
 
@@ -376,26 +460,17 @@
                             </div>
 
                             <div class="announcements-list">
+                                <?php if ($announcements->num_rows > 0): ?>
+                                <?php while ($row = $announcements->fetch_assoc()): ?>
                                 <div class="announcement-item">
-                                    <div class="announcement-title">Class Rescheduled</div>
-                                    <div class="announcement-date">March 12, 2026 - 2:30 PM</div>
-                                </div>
-
-                                <div class="announcement-item">
-                                    <div class="announcement-title">Exam Schedule Released</div>
-                                    <div class="announcement-date">March 10, 2026 - 10:15 AM</div>
-                                </div>
-
-                                <div class="announcement-item">
-                                    <div class="announcement-title">Holiday Notice</div>
-                                    <div class="announcement-date">March 08, 2026 - 9:45 AM</div>
-                                </div>
-
-                                <div class="announcement-item">
-                                    <div class="announcement-title">Staff Meeting Reminder</div>
-                                    <div class="announcement-date">March 07, 2026 - 3:20 PM</div>
+                                    <div class="announcement-title"><?php echo htmlspecialchars($row['title']); ?></div>
+                                    <div class="announcement-date"><?php echo date("F d, Y - h:i A", strtotime($row['created_at'])); ?></div>
                                 </div>
                             </div>
+                            <?php endwhile; ?>
+                            <?php else: ?>
+                            <p>No announcements.</p>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -799,40 +874,37 @@
 
                     <div class="card" style="max-width: 600px;">
                         <div style="text-align: center; margin-bottom: 24px;">
-                            <div class="teacher-avatar" style="width: 100px; height: 100px; font-size: 40px; margin: 0 auto 16px;">MR</div>
-                            <div style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">Mr. Robert</div>
+                            <div class="teacher-avatar" style="width: 100px; height: 100px; font-size: 40px; margin: 0 auto 16px;"><?php 
+echo strtoupper(substr($user['first_name'],0,1) . substr($user['last_name'],0,1)); 
+?></div>
+                            <div style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;"><?php echo $user['first_name'] . ' ' . $user['last_name']; ?></div>
                             <div style="font-size: 14px; color: var(--text-secondary);">Mathematics Teacher</div>
                         </div>
 
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; border-top: 1px solid var(--border-color); padding-top: 24px;">
                             <div class="form-group">
                                 <label class="form-label">First Name</label>
-                                <input type="text" class="form-input" value="Robert" disabled>
+                                <input type="text" class="form-input" value="<?php echo $user['first_name']; ?>" disabled>
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">Last Name</label>
-                                <input type="text" class="form-input" value="Johnson" disabled>
+                                <input type="text" class="form-input" value="<?php echo $user['last_name']; ?>" disabled>
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">Email</label>
-                                <input type="email" class="form-input" value="robert.johnson@school.edu" disabled>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Phone</label>
-                                <input type="tel" class="form-input" value="+1 (555) 123-4567" disabled>
+                                <input type="email" class="form-input" value="<?php echo $user['email']; ?>" disabled>
                             </div>
 
                             <div class="form-group">
                                 <label class="form-label">Department</label>
-                                <input type="text" class="form-input" value="Science" disabled>
+                                <input type="text" class="form-input" value="<?php echo $user['department']; ?>" disabled>
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">Employee ID</label>
-                                <input type="text" class="form-input" value="TEACH-2024-001" disabled>
+                                <label class="form-label">ID Number</label>
+                                <input type="text" class="form-input" value="<?php echo $user['id_number']; ?>" disabled>
                             </div>
                         </div>
 
@@ -847,169 +919,6 @@
         </div>
     </div>
 
-    <script>
-        // Initialize theme from localStorage
-        function initializeTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            if (savedTheme === 'dark') {
-                document.documentElement.classList.add('dark-mode');
-                updateThemeIcon();
-            }
-        }
-
-        // Initialize sidebar state from localStorage
-        function initializeSidebar() {
-            const savedSidebarState = localStorage.getItem('sidebarCollapsed') === 'true';
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
-            
-            if (savedSidebarState && window.innerWidth > 768) {
-                sidebar.classList.add('collapsed');
-                mainContent.classList.add('expanded');
-            }
-        }
-
-        // Toggle sidebar
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const mainContent = document.querySelector('.main-content');
-            
-            if (window.innerWidth <= 768) {
-                sidebar.classList.toggle('active');
-            } else {
-                const isCollapsed = sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
-                localStorage.setItem('sidebarCollapsed', isCollapsed);
-            }
-        }
-
-        // Toggle theme
-        function toggleTheme() {
-            const isDarkMode = document.documentElement.classList.toggle('dark-mode');
-            const theme = isDarkMode ? 'dark' : 'light';
-            localStorage.setItem('theme', theme);
-            updateThemeIcon();
-        }
-
-        // Update theme icon
-        function updateThemeIcon() {
-            const themeIcon = document.getElementById('theme-icon');
-            const isDarkMode = document.documentElement.classList.contains('dark-mode');
-            if (isDarkMode) {
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
-            } else {
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            }
-        }
-
-        // Set current date
-        function updateDate() {
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const today = new Date();
-            document.getElementById('current-date').textContent = today.toLocaleDateString('en-US', options);
-        }
-
-        // Switch sections
-        function switchSection(sectionId, event) {
-            if (event) {
-                event.preventDefault();
-            }
-
-            // Hide all sections
-            const sections = document.querySelectorAll('.section');
-            sections.forEach(section => {
-                section.classList.remove('active');
-            });
-
-            // Show selected section
-            const selectedSection = document.getElementById(sectionId);
-            if (selectedSection) {
-                selectedSection.classList.add('active');
-            }
-
-            // Update active nav link
-            const navLinks = document.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-            });
-            
-            if (event && event.target) {
-                event.target.closest('.nav-link').classList.add('active');
-            }
-
-            // Update page title
-            const titles = {
-                'dashboard': 'Dashboard',
-                'take-attendance': 'Take Attendance',
-                'class-attendance': 'Class Attendance',
-                'students': 'Students',
-                'appeals': 'Attendance Appeals',
-                'announcements': 'Announcements',
-                'reports': 'Reports',
-                'profile': 'My Profile'
-            };
-            document.getElementById('page-title').textContent = titles[sectionId];
-
-            // Close sidebar on mobile
-            const sidebar = document.querySelector('.sidebar');
-            if (window.innerWidth <= 768) {
-                sidebar.classList.remove('active');
-            }
-        }
-
-        // Notification bell toggle
-        function toggleNotifications() {
-            alert('You have 5 new notifications!');
-        }
-
-        // User menu toggle
-        function toggleUserMenu() {
-            alert('User profile menu would open here');
-        }
-
-        // Logout handler
-        function handleLogout() {
-
-        if (!confirm("Are you sure you want to logout?")) return;
-
-    // Redirect to logout PHP
-            window.location.href = "/Attendify/pages/teacher/logout.php";
-        }
-
-        // Close sidebar when clicking outside on mobile
-        function closeSidebarOnClickOutside(e) {
-            const sidebar = document.querySelector('.sidebar');
-            const sidebarToggle = document.querySelector('.sidebar-toggle');
-            
-            if (window.innerWidth <= 768) {
-                if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
-                    sidebar.classList.remove('active');
-                }
-            }
-        }
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeTheme();
-            initializeSidebar();
-            updateDate();
-
-            // Add click outside handler for mobile sidebar
-            document.addEventListener('click', closeSidebarOnClickOutside);
-        });
-
-        // Handle window resize
-        window.addEventListener('resize', function() {
-            const sidebar = document.querySelector('.sidebar');
-            if (window.innerWidth > 768) {
-                sidebar.classList.remove('active');
-            }
-        });
-
-        // Add smooth scroll behavior
-        document.documentElement.style.scrollBehavior = 'smooth';
-    </script>
+    <script src="/Attendify/public/assets/js/dashboard.js"></script>
 </body>
 </html>

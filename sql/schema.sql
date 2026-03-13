@@ -137,3 +137,13 @@ CREATE TABLE announcements (
 -- announcements_read (track who read which announcement)
 -- notifications (system/user notifications)
 -- attendance_settings (late threshold per class, etc.)
+
+CREATE TABLE attendance_appeals (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT NOT NULL,
+    class_section_id INT NOT NULL,
+    attendance_date DATE NOT NULL,
+    reason TEXT,
+    status ENUM('pending','approved','rejected') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

@@ -181,10 +181,12 @@ $admin_email = $_SESSION['user_email'] ?? '';
             </nav>
 
             <div class="logout-section">
-                <button class="nav-link" onclick="handleLogout()">
-                    <i class="fas fa-sign-out-alt"></i>
-                    <span>Logout</span>
-                </button>
+                <form action="logout.php" method="POST">
+                    <button class="nav-link" onclick="handleLogout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
             </div>
         </aside>
 

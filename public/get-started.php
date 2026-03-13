@@ -23,7 +23,7 @@ while (!file_exists($root . '/config/db.php') && dirname($root) !== $root) {
     $root = dirname($root);
 }
 define('ROOT_PATH', $root);
-define('BASE_URL', '/Attendifyv1/public/');   // ← matches your current folder structure
+define('BASE_URL', '/Attendify/public/');   // ← matches your current folder structure
 
 /* =============================================================
    Include core files
@@ -38,7 +38,7 @@ require_once ROOT_PATH . '/includes/security.php';
 if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
 
     if ($_SESSION['role'] === 'admin') {
-        header("Location: " . BASE_URL . "admin/admin-dashboard.view.php");
+        header("Location: " . BASE_URL . "admin/admin-dashboard.php");
     }
     elseif ($_SESSION['role'] === 'teacher') {
         header("Location: " . BASE_URL . "teacher/teacher-dashboard.php");
@@ -384,9 +384,9 @@ required
 
 <div class="footer-links">
 
-<p>Don't have an account? <a href="/Attendifyv1/public/register.php">Create one</a></p>
+<p>Don't have an account? <a href="/Attendify/public/register.php">Create one</a></p>
 
-<p>New teacher or admin? <a href="/Attendifyv1/public/request-access.php">Request access</a></p>
+<p>New teacher or admin? <a href="/Attendify/public/request-access.php">Request access</a></p>
 
 </div>
 

@@ -2,13 +2,15 @@
 session_start();
 require '../../config/db.php';
 
+$user_id = $_SESSION['user_id'];
+
 // Protect page
 if (!isset($_SESSION['user_id'])) {
     header("Location: /Attendify/public/get-started.php");
     exit();
 }
 
-$user_id = $_SESSION['user_id'];
+
 
 // =========================
 // 1. USER PROFILE
@@ -159,8 +161,8 @@ $announcement_count = $announcements->num_rows;
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Student Dashboard - Attendance Monitoring System</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link rel="stylesheet" href="/Attendifyv1/public/assets/css/student-dashboard.css">
-        <script src="/Attendifyv1/public/assets/js/dashboard.js"></script>
+        <link rel="stylesheet" href="/Attendify/public/assets/css/student-dashboard.css">
+        <script src="/Attendify/public/assets/js/dashboard.js"></script>
     </head>
     <body>
         <div class="dashboard-container">
@@ -205,13 +207,16 @@ $announcement_count = $announcements->num_rows;
                         </button>
                     </li>
                 </nav>
-
                 <div class="logout-section">
-                    <button class="nav-link" onclick="handleLogout()">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
-                    </a>
+                    <form action="logout.php" method="POST">
+                        <button class="nav-link" onclick="handleLogout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
                 </div>
+                
+            </div>
             </aside>
 
             <!-- MAIN CONTENT -->

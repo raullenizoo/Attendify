@@ -106,12 +106,15 @@ function switchSection(sectionId, event) {
     }
 
     const titles = {
-        dashboard: "Dashboard",
-        "my-attendance": "My Attendance",
-        "attendance-history": "Attendance History",
-        announcements: "Announcements",
-        profile: "My Profile"
-    };
+    dashboard: "Teacher Dashboard",
+    "take-attendance": "Take Attendance",
+    "class-attendance": "Class Attendance",
+    students: "Students",
+    appeals: "Attendance Appeals",
+    announcements: "Announcements",
+    reports: "Reports",
+    profile: "Profile"
+};
 
     const pageTitle = document.getElementById("page-title");
     if (pageTitle) pageTitle.textContent = titles[sectionId] || "Dashboard";
@@ -122,12 +125,6 @@ function switchSection(sectionId, event) {
     }
 }
 
-// ===============================
-// Notifications
-// ===============================
-function toggleNotifications() {
-    alert("Notifications feature coming soon.");
-}
 
 // ===============================
 // User Menu
@@ -137,13 +134,13 @@ function toggleUserMenu() {
     if (menu) menu.classList.toggle('active');
 }
 
-function handleLogout() {
-    if (!confirm("Are you sure you want to logout?")) return;
+// function handleLogout() {
+//     if (!confirm("Are you sure you want to logout?")) return;
 
-    // Gamitin natin ang eksaktong folder name mo (Attendify)
-    // Siguraduhin na "Attendify" ang name ng folder mo sa htdocs
-    window.location.href = "/Attendifyv1/public/logout.php";
-}
+//     // Gamitin natin ang eksaktong folder name mo (Attendify)
+//     // Siguraduhin na "Attendify" ang name ng folder mo sa htdocs
+//     window.location.href = "/Attendify/student/public/logout.php";
+// }
 
 // ===============================
 // Close Sidebar (Mobile)

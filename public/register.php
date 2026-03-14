@@ -1,6 +1,5 @@
 <?php
-session_start();
-// require '../includes/security.php';
+require '../includes/security.php';
 require '../config/db.php';
 
 $errors = [];
@@ -142,7 +141,7 @@ $errors[] = "Registration failed. Please try again.";
     <div class="right-side">
         <form action="" method="POST">
         
-        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+        <?php csrf_input_field(); ?>
         <h2>Register Now!</h2>
 
         <?php if(!empty($errors)): ?>

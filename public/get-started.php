@@ -1,20 +1,4 @@
 <?php
-/* -----------------------------
-   Secure Session Configuration
-------------------------------*/
-
-// Ensure this is first thing in the file
-if (session_status() === PHP_SESSION_NONE) {
-    session_set_cookie_params([
-        'lifetime' => 0,
-        'path' => '/',
-        'secure' => false, // change to true if HTTPS
-        'httponly' => true,
-        'samesite' => 'Strict'
-    ]);
-    session_start();
-}
-
 /* =============================================================
    UNIVERSAL PROJECT ROOT DETECTION (best method for your setup)
    ============================================================= */
@@ -26,7 +10,7 @@ define('ROOT_PATH', $root);
 define('BASE_URL', '/Attendify/public/');   // ← matches your current folder structure
 
 /* =============================================================
-   Include core files
+   Include core files (secure session + DB)
    ============================================================= */
 require_once ROOT_PATH . '/config/db.php';
 require_once ROOT_PATH . '/includes/security.php';
@@ -54,11 +38,8 @@ if (isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
    CSRF Token
 ------------------------------*/
 
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-
-$csrf_token = $_SESSION['csrf_token'];
+// Ensure a CSRF token is available for forms
+csrf_token();
 
 /* -----------------------------
    Messages
@@ -77,7 +58,24 @@ if (isset($_GET['registered']) && $_GET['registered'] === '1') {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+    // Basic login rate limiting (per session)
+    $max_login_attempts = 5;
+    $login_window_seconds = 300; // 5 minutes
+
+    if (!isset($_SESSION['login_attempts'])) {
+        $_SESSION['login_attempts'] = [];
+    }
+
+    // Keep only recent attempts
+    $_SESSION['login_attempts'] = array_filter(
+        $_SESSION['login_attempts'],
+        fn($ts) => $ts > (time() - $login_window_seconds)
+    );
+
+    if (count($_SESSION['login_attempts']) >= $max_login_attempts) {
+        $wait = $login_window_seconds - (time() - min($_SESSION['login_attempts']));
+        $error_message = "Too many login attempts. Please try again in " . ceil($wait / 60) . " minute(s).";
+    } elseif (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
 
         $error_message = "Security check failed. Please refresh and try again.";
 
@@ -115,6 +113,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if (password_verify($password, $user['password_hash'])) {
 
+                        // Reset login attempt counter on successful login
+                        $_SESSION['login_attempts'] = [];
+
                         session_regenerate_id(true);
 
                         $_SESSION['user_id'] = $user['id'];
@@ -147,9 +148,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         exit();
 
                     } else {
+                        $_SESSION['login_attempts'][] = time();
                         $error_message = "Invalid ID number or password.";
                     }
                 } else {
+                    $_SESSION['login_attempts'][] = time();
                     $error_message = "Invalid ID number or password.";
                 }
                 $stmt->close();
@@ -359,7 +362,7 @@ Track attendance effortlessly and get real-time insights — made for students, 
 
 <form method="POST" autocomplete="off">
 
-<input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
+<?php csrf_input_field(); ?>
 
 <label>ID Number</label>
 

@@ -3,10 +3,7 @@
 // public/admin/admin-dashboard.php
 // ====================
 
-// 1️⃣ Start session safely
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// 1️⃣ (session is started by includes/security.php)
 
 /* =============================================================
    BOOTSTRAP INCLUDE — one line, everything else is handled

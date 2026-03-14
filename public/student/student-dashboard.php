@@ -1,6 +1,6 @@
 <?php
-session_start();
 require '../../config/db.php';
+require '../../includes/security.php';
 
 $user_id = $_SESSION['user_id'];
 

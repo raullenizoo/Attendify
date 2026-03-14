@@ -1,6 +1,4 @@
 <?php
-session_start();
-
 /* =============================================================
    BOOTSTRAP INCLUDE — that's all you need now!
    ============================================================= */
@@ -274,7 +272,7 @@ padding:50px 30px;
         <?php endif; ?>
 
         <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST">
-            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+            <?php csrf_input_field(); ?>
 
             <label>First Name</label>
             <input type="text" name="first_name" placeholder="Enter your first name" value="<?php echo htmlspecialchars($_POST['first_name'] ?? ''); ?>" required>

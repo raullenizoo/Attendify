@@ -2,6 +2,22 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            caret-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        button,
+        a,
+        .nav-link,
+        .sidebar-toggle,
+        .theme-toggle,
+        .notification-bell,
+        .btn {
+            cursor: pointer;
         }
 
         :root {
@@ -139,6 +155,10 @@
             width: 100%;
             text-align: left;
             white-space: nowrap;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .sidebar.collapsed .nav-link {
@@ -279,6 +299,11 @@
             outline: none;
             color: var(--text-primary);
             font-size: 14px;
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            caret-color: auto;
         }
 
         .search-bar input::placeholder {
@@ -597,6 +622,10 @@
             transition: var(--transition);
             width: 100%;
             text-align: center;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .btn-primary {
@@ -841,6 +870,11 @@
             font-size: 14px;
             font-family: inherit;
             transition: var(--transition);
+            user-select: text;
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            caret-color: auto;
         }
 
         .form-input:focus,
@@ -893,6 +927,13 @@
             .announcements-container {
                 grid-template-columns: 1fr;
             }
+        }
+
+        /* Allow text cursor in input fields */
+        input,
+        textarea,
+        select {
+            caret-color: auto;
         }
 
         @media (max-width: 768px) {
@@ -1011,8 +1052,15 @@
                 font-size: 16px;
             }
 
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin-bottom: 20px;
+            }
+
             table {
                 font-size: 12px;
+                min-width: 600px;
             }
 
             th, td {
@@ -1132,9 +1180,67 @@
                 font-size: 14px;
             }
 
-            th, td {
-                padding: 8px 12px;
-                font-size: 11px;
+            /* ==================== MOBILE TABLE STYLES ==================== */
+            .table-container {
+                overflow-x: visible;
+                border-radius: 8px;
+                margin-bottom: 16px;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: separate;
+                border-spacing: 0;
+                min-width: auto;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tbody {
+                display: block;
+            }
+
+            tbody tr {
+                display: block;
+                border: 1px solid var(--border-color);
+                border-radius: 8px;
+                margin-bottom: 12px;
+                overflow: hidden;
+                box-shadow: var(--shadow-sm);
+            }
+
+            tbody tr:hover {
+                background-color: transparent;
+                box-shadow: var(--shadow-md);
+            }
+
+            tbody td {
+                display: block;
+                width: 100%;
+                padding: 12px;
+                text-align: right;
+                border-bottom: 1px solid var(--border-color);
+                position: relative;
+                padding-left: 50%;
+                box-sizing: border-box;
+            }
+
+            tbody td:last-child {
+                border-bottom: none;
+            }
+
+            tbody td:before {
+                content: attr(data-label);
+                position: absolute;
+                left: 12px;
+                font-weight: 600;
+                color: var(--text-secondary);
+                font-size: 12px;
+                top: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
             }
 
             .class-subject {
@@ -1144,6 +1250,7 @@
             .btn {
                 padding: 8px 12px;
                 font-size: 12px;
+                width: 100%;
             }
 
             .appeal-item {
@@ -1161,7 +1268,121 @@
             }
         }
 
-        /* ==================== SCROLLBAR ==================== */
+        /* ==================== EXTRA SMALL DEVICES (320px and below) ==================== */
+        @media (max-width: 360px) {
+            .content {
+                padding: 8px;
+            }
+
+            .welcome-title {
+                font-size: 18px;
+            }
+
+            .welcome-subtitle {
+                font-size: 11px;
+            }
+
+            .stat-card {
+                padding: 10px;
+            }
+
+            .stat-number {
+                font-size: 18px;
+            }
+
+            .stat-label {
+                font-size: 10px;
+            }
+
+            .stat-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+                margin-bottom: 8px;
+            }
+
+            .section-title {
+                font-size: 12px;
+                margin-bottom: 10px;
+            }
+
+            .table-container {
+                border-radius: 8px;
+                margin-bottom: 12px;
+            }
+
+            table {
+                min-width: 400px;
+            }
+
+            th, td {
+                padding: 6px 10px;
+                font-size: 10px;
+            }
+
+            .badge {
+                padding: 4px 8px;
+                font-size: 10px;
+            }
+
+            .btn {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+
+            .form-group {
+                margin-bottom: 12px;
+            }
+
+            .form-label {
+                font-size: 12px;
+            }
+
+            .form-input {
+                font-size: 12px;
+                padding: 8px;
+            }
+        }
+
+        /* ==================== PRINT STYLES ==================== */
+        @media print {
+            .sidebar,
+            .top-nav,
+            .btn,
+            .search-bar,
+            .theme-toggle,
+            .notification-bell,
+            .sidebar-toggle {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content {
+                padding: 0;
+            }
+
+            body {
+                background-color: white;
+            }
+
+            .card,
+            .table-container {
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+
+            table {
+                border-collapse: collapse;
+            }
+
+            th, td {
+                border: 1px solid #ccc;
+            }
+        }
+
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;

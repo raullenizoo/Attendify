@@ -100,115 +100,216 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Request Access - Attendify</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        a { text-decoration: none; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
-        body { display: flex; min-height: 100vh; align-items: center; justify-content: center; background-color: #f4f7f9; padding: 20px; }
-        
-        .container {
-            display: flex; width: 900px; background: white; border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden;
-        }
-        
-        .left-side {
-            flex: 1; padding: 50px; background-color: #2c3e50; color: white;
-            display: flex; flex-direction: column; justify-content: center;
-        }
-        .left-side h1 { font-size: 2.5rem; margin-bottom: 15px; }
-        .left-side p { font-size: 1.1rem; line-height: 1.6; opacity: 0.9; }
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="../assets/img/logo.jpg">
 
-        .right-side {
-            flex: 1.2; padding: 40px; display: flex; flex-direction: column; justify-content: center;
-        }
-        .right-side h2 { margin-bottom: 20px; color: #333; text-align: center; }
-        
-        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; color: #555; font-size: 0.9rem; }
-        input[type="text"], input[type="email"], input[type="password"], select, textarea {
-            width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #ccc;
-            border-radius: 8px; font-size: 0.9rem; box-sizing: border-box;
-        }
-        button {
-            width: 100%; padding: 14px; margin-top: 15px; background-color: #3498db;
-            color: white; border: none; border-radius: 8px; cursor: pointer;
-            font-size: 1rem; font-weight: bold; transition: background-color 0.3s ease;
-        }
-        button:hover { background-color: #2980b9; }
-        
-        .error-message { color: #e74c3c; font-size: 0.85rem; margin-top: 5px; text-align: center; }
-        .success-message { color: #27ae60; font-size: 0.95rem; margin-top: 15px; text-align: center; font-weight: 600; }
+<style>
 
-        .footer-links { margin-top: 20px; text-align: center; font-size: 0.85em; }
-        .footer-links a { color: #3498db; font-weight: 600; }
-        .footer-links a:hover { text-decoration: underline; }
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+font-family:'Poppins',sans-serif;
+}
 
-        @media (max-width: 768px) {
-            .container { flex-direction: column; width: auto; }
-            .left-side { padding: 30px; text-align: center; }
-            .right-side { padding: 30px; }
-            .row { grid-template-columns: 1fr; }
-        }
-    </style>
+body{
+min-height:100vh;
+background:#f4f7f9;
+display:flex;
+align-items:center;
+justify-content:center;
+padding:20px;
+}
+
+.container{
+display:flex;
+width:100%;
+max-width:900px;
+background:white;
+border-radius:16px;
+box-shadow:0 10px 40px rgba(0,0,0,0.12);
+overflow:hidden;
+}
+
+.left-side{
+flex:1;
+background:#2c3e50;
+color:white;
+padding:60px 50px;
+display:flex;
+flex-direction:column;
+justify-content:center;
+}
+
+.left-side h1{
+font-size:2.8rem;
+margin-bottom:1rem;
+}
+
+.left-side p{
+font-size:1.1rem;
+line-height:1.7;
+opacity:0.9;
+}
+
+.right-side{
+flex:1;
+padding:60px 50px;
+background:white;
+}
+
+h2{
+margin-bottom:2rem;
+color:#2c3e50;
+font-weight:600;
+}
+
+.success{
+background:#e8f5e9;
+color:#2e7d32;
+padding:12px 16px;
+border-radius:8px;
+margin-bottom:1.5rem;
+}
+
+.error{
+background:#ffebee;
+color:#c62828;
+padding:12px 16px;
+border-radius:8px;
+margin-bottom:1.5rem;
+}
+
+form{
+display:flex;
+flex-direction:column;
+}
+
+label{
+margin-bottom:0.5rem;
+font-weight:500;
+color:#444;
+}
+
+input, select, textarea {
+padding:14px 16px;
+margin-bottom:1.2rem;
+border:1px solid #d1d9e0;
+border-radius:8px;
+font-size:1rem;
+width:100%;
+}
+
+input:focus, select:focus, textarea:focus{
+outline:none;
+border-color:#3498db;
+box-shadow:0 0 0 3px rgba(52,152,219,0.15);
+}
+
+button{
+padding:14px;
+background:#3498db;
+color:white;
+border:none;
+border-radius:8px;
+font-size:1.05rem;
+font-weight:600;
+cursor:pointer;
+}
+
+button:hover{
+background:#2980b9;
+}
+
+.footer-links{
+margin-top:1.8rem;
+text-align:center;
+font-size:0.92rem;
+color:#555;
+}
+
+.footer-links a{
+color:#3498db;
+font-weight:500;
+}
+
+.footer-links a:hover{
+text-decoration:underline;
+}
+
+@media(max-width:768px){
+
+.container{
+flex-direction:column;
+max-width:480px;
+}
+
+.left-side,.right-side{
+padding:50px 30px;
+}
+
+}
+
+</style>
 </head>
 <body>
 
 <div class="container">
     <div class="left-side">
         <h1>Attendify</h1>
-        <p><strong>Streamline your attendance.</strong><br> Request elevated access to manage student attendance and generate reports with ease.</p>
+        <p><strong>Streamline your classroom.</strong><br>Request elevated access to manage student attendance and generate reports with ease.</p>
     </div>
+
     <div class="right-side">
         <h2>Request Access</h2>
 
-        <?php
-        if (!empty($errors)) {
-            foreach ($errors as $error) {
-                echo '<p class="error-message">' . htmlspecialchars($error) . '</p>';
-            }
-        }
-        if (!empty($success_message)) {
-            echo '<p class="success-message">' . htmlspecialchars($success_message) . '</p>';
-        }
-        ?>
+        <?php if (!empty($errors)): ?>
+            <?php foreach ($errors as $error): ?>
+                <div class="error"><?= htmlspecialchars($error) ?></div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+
+        <?php if (!empty($success_message)): ?>
+            <div class="success"><?= htmlspecialchars($success_message) ?></div>
+        <?php endif; ?>
 
         <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST">
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
 
-            <div class="row">
-                <div class="form-group"><input type="text" id="first_name" name="first_name" placeholder="First Name" value="<?php echo htmlspecialchars($_POST['first_name'] ?? ''); ?>" required></div>
-                <div class="form-group"><input type="text" id="last_name" name="last_name" placeholder="Last Name" value="<?php echo htmlspecialchars($_POST['last_name'] ?? ''); ?>" required></div>
-            </div>
+            <label>First Name</label>
+            <input type="text" name="first_name" placeholder="Enter your first name" value="<?php echo htmlspecialchars($_POST['first_name'] ?? ''); ?>" required>
 
-            <div class="form-group"><input type="text" id="id_number" name="id_number" placeholder="ID Number" value="<?php echo htmlspecialchars($_POST['id_number'] ?? ''); ?>" required></div>
-            <div class="form-group"><input type="email" id="email" name="email" placeholder="Email Address" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required></div>
+            <label>Last Name</label>
+            <input type="text" name="last_name" placeholder="Enter your last name" value="<?php echo htmlspecialchars($_POST['last_name'] ?? ''); ?>" required>
 
-            <div class="row">
-                <div class="form-group"><input type="password" id="password" name="password" placeholder="Password" required></div>
-                <div class="form-group"><input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password" required></div>
-            </div>
+            <label>ID Number</label>
+            <input type="text" name="id_number" placeholder="1234567890" value="<?php echo htmlspecialchars($_POST['id_number'] ?? ''); ?>" required>
 
-            <div class="form-group">
-                <select id="role" name="role" required>
-                    <option value="">Select Role</option>
-                    <option value="Teacher" <?php echo (($_POST['role'] ?? '') == 'Teacher') ? 'selected' : ''; ?>>Teacher</option>
-                    <option value="Admin" <?php echo (($_POST['role'] ?? '') == 'Admin') ? 'selected' : ''; ?>>Admin</option>
-                </select>
-            </div>
+            <label>Email Address</label>
+            <input type="email" name="email" placeholder="your.email@example.com" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
 
-            <div class="form-group">
-                <label for="message">Optional Message (Why you need access)</label>
-                <textarea id="message" name="message" placeholder="e.g., I need admin access to manage user accounts."><?php echo htmlspecialchars($_POST['message'] ?? ''); ?></textarea>
-            </div>
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Enter a strong password" required>
+
+            <label>Confirm Password</label>
+            <input type="password" name="confirm_password" placeholder="Re-enter your password" required>
+
+            <label>Role Request</label>
+            <select name="role" required>
+                <option value="">Select Role</option>
+                <option value="Teacher" <?php echo (($_POST['role'] ?? '') == 'Teacher') ? 'selected' : ''; ?>>Teacher</option>
+                <option value="Admin" <?php echo (($_POST['role'] ?? '') == 'Admin') ? 'selected' : ''; ?>>Admin</option>
+            </select>
+
+            <label>Optional Message (Why you need access)</label>
+            <textarea name="message" placeholder="e.g., I need admin access to manage user accounts." rows="4"><?php echo htmlspecialchars($_POST['message'] ?? ''); ?></textarea>
 
             <button type="submit">Submit Request</button>
-        </form>
 
-        <div class="footer-links">
-            <p><a href="<?= BASE_URL ?>get-started.php">Already have an account? Login here</a></p>
-        </div>
+            <div class="footer-links">
+                <p>Already have an account? <a href="/Attendify/public/get-started.php">Sign in here</a></p>
+            </div>
+        </form>
     </div>
 </div>
 

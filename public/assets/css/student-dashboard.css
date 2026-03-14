@@ -2,6 +2,21 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    caret-color: transparent;
+    -webkit-touch-callout: none;
+        }
+
+        button, a, .nav-link {
+            cursor: pointer;
+        }
+
+        input, textarea, select {
+            user-select: text;
+            caret-color: auto;
         }
 
         :root {
@@ -139,6 +154,10 @@
             width: 100%;
             text-align: left;
             white-space: nowrap;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .sidebar.collapsed .nav-link {
@@ -772,6 +791,10 @@
             font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
 
         .btn-primary {
@@ -791,6 +814,13 @@
 
         .btn-secondary:hover {
             background-color: var(--bg-secondary);
+        }
+
+        /* Allow text cursor in input fields */
+        input,
+        textarea,
+        select {
+            caret-color: auto;
         }
 
         /* ==================== RESPONSIVE DESIGN ==================== */

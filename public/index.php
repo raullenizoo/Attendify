@@ -25,7 +25,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <link rel="shortcut icon" href="assets/img/logo.jpg" type="image/x-icon">
-    <link rel="stylesheet" href="/Attendifyv1/public/assets/css/main.css">
+    <link rel="stylesheet" href="/Attendify/public/assets/css/main.css">
 </head>
 <body>
 
@@ -38,7 +38,7 @@
     <li><a href="#testimonials">Testimonials</a></li>
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a class="btn get-started" href="/Attendifyv1/public/get-started.php">Get Started</a></li>
+    <li><a class="btn get-started" href="/Attendify/public/get-started.php">Get Started</a></li>
   </ul>
   <!--<div class="theme-toggle">🌙</div>-->
   <div class="nav-icons">
@@ -217,7 +217,7 @@
   © 2026 Attendify. All Rights Reserved.
 </footer>
 
-<script src="/Attendifyv1/public/assets/js/main.js"></script>
+<script src="/Attendify/public/assets/js/main.js"></script>
 
 </body>
 </html>
